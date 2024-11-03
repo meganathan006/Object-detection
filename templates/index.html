@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv8 Object Detection Web App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom right, #e2e2e2, #ffffff);
+            color: #333;
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #ff6f61, #de5c99);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .description {
+            margin: 20px 0;
+            font-size: 1.2em;
+            text-align: left;
+            padding: 0 20px;
+        }
+        .video-container, .upload-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #video {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 2px solid #007BFF;
+            display: none; /* Initially hidden */
+        }
+        button {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin: 10px;
+            color: white;
+            font-weight: bold;
+            outline: none;
+        }
+        button.start {
+            background-color: #28a745;
+        }
+        button.start:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+        button.stop {
+            background-color: #dc3545;
+        }
+        button.stop:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+        .upload-container {
+            background: #f8f9fa;
+            border: 2px dashed #007BFF;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .upload-container input[type="file"] {
+            margin: 10px 0;
+        }
+        .output-container img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px 0;
+            background: #007BFF;
+            color: white;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            button {
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+            .description {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>YOLOv8 Object Detection Web App</h1>
+</header>
+
+<div class="container">
+    <h2>Project Overview</h2>
+    <p class="description">
+        This project showcases an implementation of YOLOv8 (You Only Look Once version 8), a cutting-edge real-time object detection model. 
+        By leveraging advanced computer vision techniques, the application detects and classifies various objects in real time using a webcam or video feed.
+    </p>
+    
+    <h3>Key Features</h3>
+    <ul class="description">
+        <li>Real-time object detection and classification</li>
+        <li>Utilizes the latest YOLOv8 architecture for high accuracy</li>
+        <li>Interactive web interface powered by FastAPI</li>
+        <li>Start and stop video feed with user-friendly buttons</li>
+        <li>Upload an image for processing</li>
+        <li>Responsive design for seamless usage on different devices</li>
+    </ul>
+
+    <h3>Real-Time Video Feed</h3>
+    <div class="video-container">
+        <img id="video" src="http://localhost:8000/video_feed" alt="Video Feed">
+    </div>
+
+    <button class="start" id="startButton">Start Detection</button>
+    <button class="stop" id="stopButton" style="display: none;">Stop Detection</button>
+
+    <div class="upload-container">
+        <h3>Upload Image for Detection</h3>
+        <form id="uploadForm">
+            <input type="file" name="file" accept="image/*" required>
+            <button type="submit">Upload Image</button>
+        </form>
+        <div class="output-container"></div>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2024 YOLOv8 Object Detection Project | Developed by Meganathan</p>
+</footer>
+
+<script>
+    const videoElement = document.getElementById("video");
+    const startButton = document.getElementById("startButton");
+    const stopButton = document.getElementById("stopButton");
+    const uploadForm = document.getElementById("uploadForm");
+    const outputContainer = document.querySelector(".output-container");
+
+    startButton.addEventListener("click", () => {
+        videoElement.style.display = "block"; // Show the video element
+        startButton.style.display = "none"; // Hide start button
+        stopButton.style.display = "inline-block"; // Show stop button
+    });
+
+    stopButton.addEventListener("click", () => {
+        videoElement.style.display = "none"; // Hide the video element
+        startButton.style.display = "inline-block"; // Show start button
+        stopButton.style.display = "none"; // Hide stop button
+    });
+
+    uploadForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(uploadForm);
+
+        const response = await fetch('/upload_image', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.output_image) {
+            outputContainer.innerHTML = `<h4>Processed Image:</h4><img src="${result.output_image}" alt="Annotated Image">`;
+        } else {
+            outputContainer.innerHTML = `<p>Error processing image.</p>`;
+        }
+    });
+</script>
+</body>
+</html>
