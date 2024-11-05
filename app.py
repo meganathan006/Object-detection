@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 app = FastAPI()
-templates = Jinja2Templates(directory="docs")
+templates = Jinja2Templates(directory=".")
 model = YOLO('yolov8n.pt')  # Load the YOLOv8 model
 
 # Directory to save uploaded and processed images
